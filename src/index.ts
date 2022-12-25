@@ -1,9 +1,13 @@
 import http from 'http';
+import * as dotenv from 'dotenv';
+
 import UsersService from './services/UsersService';
 import { AppRoutes, Method } from './types/const';
 import { catchApiError } from './utils/common';
 
-const PORT = 3000;
+dotenv.config();
+
+const { PORT } = process.env;
 
 const server = http.createServer(async (request, response) => {
     const { url, method } = request;
@@ -12,6 +16,7 @@ const server = http.createServer(async (request, response) => {
     console.log('url', url);
     console.log('method', method);
 
+    // !GET user by id
     if (userId && url.includes(AppRoutes.USERS) && method === Method.GET) {
         try {
             const user = await UsersService.getUser(userId);
@@ -23,6 +28,7 @@ const server = http.createServer(async (request, response) => {
         }
     }
 
+    // !GET users
     if (url === AppRoutes.USERS && method === Method.GET) {
         const users = UsersService.getUsers();
 
@@ -30,6 +36,7 @@ const server = http.createServer(async (request, response) => {
         response.end(JSON.stringify({ users }));
     }
 
+    // !POST user
     if (url === AppRoutes.USERS && method === Method.POST) {
         try {
             const createdUser = await UsersService.createUser(request);
