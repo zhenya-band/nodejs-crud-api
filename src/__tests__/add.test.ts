@@ -1,4 +1,4 @@
-import { addOne } from './../add';
+import { addOne } from '../add';
 
 describe('first test', () => {
   it('should add one 1 + 1 = 2', () => {
