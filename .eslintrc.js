@@ -25,7 +25,7 @@ module.exports = {
                 ts: 'never',
             },
         ],
-        'arrow-body-style': ['error', 'always'],
+        'arrow-body-style': 'off',
         indent: ['error', 4],
         'no-console': 'off',
         'no-shadow': 'off',
@@ -33,6 +33,7 @@ module.exports = {
         'no-unused-vars': 'off',
         '@typescript-eslint/no-unused-vars': 'error',
         'class-methods-use-this': 'off',
+        'no-plusplus': ['error', { allowForLoopAfterthoughts: true }],
     },
     settings: {
         'import/resolver': {

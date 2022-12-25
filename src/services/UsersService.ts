@@ -1,5 +1,6 @@
 import http from 'http';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate as validateUuid } from 'uuid';
+import ApiError from '../errors/ApiError';
 
 import { CreateUser, User } from '../types/index';
 import { getBody } from '../utils/common';
@@ -17,6 +18,16 @@ class UsersService {
 
     getUsers(): User[] {
         return this.users;
+    }
+
+    getUser(userId: string): User {
+        if (!validateUuid(userId)) throw new ApiError(400, `Not valid id: ${userId}`);
+
+        const user = this.users.find((u) => u.id === userId);
+
+        if (!user) throw new ApiError(404, `User with id=${userId} doesn't exist`);
+
+        return user;
     }
 
     async createUser(request: http.IncomingMessage): Promise<User> {

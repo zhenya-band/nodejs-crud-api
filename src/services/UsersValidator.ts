@@ -1,4 +1,4 @@
-import ApiError from '../Error/ApiError';
+import ApiError from '../errors/ApiError';
 import { CreateUser } from '../types/index';
 
 export interface UsersValidatorInterface {
