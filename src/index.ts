@@ -2,7 +2,7 @@ import http from 'http';
 import * as dotenv from 'dotenv';
 
 import UsersService from './services/UsersService';
-import { AppRoutes, Method } from './types/const';
+import { AppRoutes, Method, NOT_FOUND_MESSAGE } from './types/const';
 import { catchApiError } from './utils/common';
 
 dotenv.config();
@@ -16,7 +16,6 @@ const server = http.createServer(async (request, response) => {
     console.log('url', url);
     console.log('method', method);
 
-    // !GET user by id
     if (userId && url.includes(AppRoutes.USERS) && method === Method.GET) {
         try {
             const user = await UsersService.getUser(userId);
@@ -26,18 +25,16 @@ const server = http.createServer(async (request, response) => {
         } catch (error) {
             catchApiError(error, response);
         }
-    }
+    } else if (url === AppRoutes.USERS && method === Method.GET) {
+        try {
+            const users = UsersService.getUsers();
 
-    // !GET users
-    if (url === AppRoutes.USERS && method === Method.GET) {
-        const users = UsersService.getUsers();
-
-        response.writeHead(200, { 'Content-Type': 'application/json' });
-        response.end(JSON.stringify(users));
-    }
-
-    // !POST user
-    if (url === AppRoutes.USERS && method === Method.POST) {
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(users));
+        } catch (error) {
+            catchApiError(error, response);
+        }
+    } else if (url === AppRoutes.USERS && method === Method.POST) {
         try {
             const createdUser = await UsersService.createUser(request);
 
@@ -46,10 +43,7 @@ const server = http.createServer(async (request, response) => {
         } catch (error) {
             catchApiError(error, response);
         }
-    }
-
-    // !DELETE user by id
-    if (userId && url.includes(AppRoutes.USERS) && method === Method.DELETE) {
+    } else if (userId && url.includes(AppRoutes.USERS) && method === Method.DELETE) {
         try {
             await UsersService.deleteUser(userId);
 
@@ -58,10 +52,7 @@ const server = http.createServer(async (request, response) => {
         } catch (error) {
             catchApiError(error, response);
         }
-    }
-
-    // !UPDATE user by id
-    if (userId && url.includes(AppRoutes.USERS) && method === Method.PUT) {
+    } else if (userId && url.includes(AppRoutes.USERS) && method === Method.PUT) {
         try {
             const updatedUser = await UsersService.updateUser(userId, request);
 
@@ -70,6 +61,9 @@ const server = http.createServer(async (request, response) => {
         } catch (error) {
             catchApiError(error, response);
         }
+    } else {
+        response.writeHead(404);
+        response.end(NOT_FOUND_MESSAGE);
     }
 });
 

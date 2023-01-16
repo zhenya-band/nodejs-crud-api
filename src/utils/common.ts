@@ -22,6 +22,7 @@ export const catchApiError = (error: unknown, response: http.ServerResponse) => 
         response.writeHead(error.statusCode);
         response.end(error.message);
     }
-    response.writeHead(500);
+
+    response.writeHead(500, 'Internal server error');
     response.end();
 };

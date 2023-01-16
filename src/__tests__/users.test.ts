@@ -2,7 +2,7 @@ import request from 'supertest';
 import { v4 as uuidv4, validate as validateUuid } from 'uuid';
 
 import server from '../index';
-import { AppRoutes } from '../types/const';
+import { AppRoutes, NOT_FOUND_MESSAGE } from '../types/const';
 import { User } from '../types/index';
 
 const createUserData = {
@@ -17,7 +17,23 @@ const createUserData2 = {
     hobbies: ['fishing'],
 };
 
-describe('api/users', () => {
+const createUserData3 = {
+    username: 'test name 3',
+    age: 30,
+    hobbies: ['hob1', 'hob2', 'hob3'],
+};
+
+afterAll(() => {
+    server.close();
+});
+
+const updateUserData3 = {
+    username: 'updated test name 3',
+    age: 45,
+    hobbies: ['hob1', 'hob2', 'hob3', 'hob4'],
+};
+
+describe('case 1', () => {
     let createdUserId: string = '';
 
     it('should return empty array if no users (GET)', async () => {
@@ -84,7 +100,7 @@ describe('api/users', () => {
     });
 });
 
-describe('create 2 users -> delete first user', () => {
+describe('case 2 (create 2 users -> delete first user)', () => {
     let createdUserId1 = '';
 
     it('should create user with correct body OK (POST)', async () => {
@@ -127,7 +143,78 @@ describe('create 2 users -> delete first user', () => {
     });
 });
 
-describe('should return correct errors get user by id (GET)', () => {
+describe('case 3', () => {
+    let createdUserId1 = '';
+
+    it('should return 404 if request to non-existing endpoints (GET)', async () => {
+        const response = await request(server)
+            .get('/api/non-existing')
+            .expect(404);
+
+        expect(response.text).toBe(NOT_FOUND_MESSAGE);
+    });
+
+    it('create user (POST)', async () => {
+        const response1 = await request(server)
+            .post(AppRoutes.USERS)
+            .send(createUserData3)
+            .expect(201);
+
+        createdUserId1 = response1.body.id;
+    });
+
+    it('update user (PUT)', async () => {
+        const response = await request(server)
+            .put(`${AppRoutes.USERS}/${createdUserId1}`)
+            .send(updateUserData3)
+            .expect(200);
+
+        expect(response.body.id).toBe(createdUserId1);
+        expect(response.body.username).toBe(updateUserData3.username);
+        expect(response.body.hobbies).toHaveLength(4);
+        expect(response.body.hobbies).toStrictEqual(updateUserData3.hobbies);
+        expect(response.body.age).toBe(updateUserData3.age);
+    });
+
+    it('get updated user', async () => {
+        const response = await request(server)
+            .get(`${AppRoutes.USERS}/${createdUserId1}`)
+            .send(updateUserData3)
+            .expect(200);
+
+        expect(response.body.id).toBe(createdUserId1);
+        expect(response.body.username).toBe(updateUserData3.username);
+        expect(response.body.hobbies).toStrictEqual(updateUserData3.hobbies);
+        expect(response.body.age).toStrictEqual(updateUserData3.age);
+    });
+
+    it('updated user with wrong data (PUT)', async () => {
+        const wrongData = { ...updateUserData3, username: null };
+
+        const response = await request(server)
+            .put(`${AppRoutes.USERS}/${createdUserId1}`)
+            .send(wrongData)
+            .expect(400);
+
+        expect(response.text).toBe('missing required field: username');
+    });
+
+    it('delete updated user (DELETE)', async () => {
+        await request(server)
+            .delete(`${AppRoutes.USERS}/${createdUserId1}`)
+            .expect(204);
+    });
+
+    it('delete not existing user (DELETE)', async () => {
+        const response = await request(server)
+            .delete(`${AppRoutes.USERS}/${createdUserId1}`)
+            .expect(404);
+
+        expect(response.text).toBe(`User with id: ${createdUserId1} not found`);
+    });
+});
+
+describe('case 4: should return correct errors get user by id (GET)', () => {
     it('should return 400 status code in case of invalid id (GET)', async () => {
         const badId = 'not-a-uuid-id';
 
