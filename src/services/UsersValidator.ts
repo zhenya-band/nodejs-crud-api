@@ -23,11 +23,19 @@ class UsersValidator implements UsersValidatorInterface {
             throw new ApiError(400, 'field age must be number');
         }
 
+        if (user.age < 0) {
+            throw new ApiError(400, 'field age must be >= 0');
+        }
+
         if (typeof user.username !== 'string') {
             throw new ApiError(400, 'field username must be string');
         }
 
         if (!Array.isArray(user.hobbies)) {
+            throw new ApiError(400, 'field hobbies must be array of string');
+        }
+
+        if (!user.hobbies.every((hobby) => typeof hobby === 'string')) {
             throw new ApiError(400, 'field hobbies must be array of string');
         }
     }

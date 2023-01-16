@@ -42,6 +42,31 @@ class UsersService {
 
         return userWithId;
     }
+
+    async deleteUser(userId: string): Promise<void> {
+        if (!validateUuid(userId)) throw new ApiError(400, `Not valid id: ${userId}`);
+
+        const userIndexForDelete = this.users.findIndex((user) => user.id === userId);
+        if (userIndexForDelete === -1) throw new ApiError(404, `User with id: ${userId} not found`);
+
+        this.users.splice(userIndexForDelete, 1);
+    }
+
+    async updateUser(userId: string, request: http.IncomingMessage): Promise<User> {
+        const userRaw = await getBody(request);
+        const userPayload: CreateUser = JSON.parse(userRaw);
+
+        if (!validateUuid(userId)) throw new ApiError(400, `Not valid id: ${userId}`);
+
+        const userForUpdate = this.users.find((user) => user.id === userId);
+        if (!userForUpdate) throw new ApiError(404, `User with id: ${userId} not found`);
+
+        this.usersValidator.validateCreateUserBody(userPayload);
+
+        const updatedUserWithId = { ...userPayload, id: userForUpdate.id };
+        this.users = this.users.map((user) => (user.id === userId ? updatedUserWithId : user));
+        return updatedUserWithId;
+    }
 }
 
 export default new UsersService(new UsersValidator());

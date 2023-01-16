@@ -3,6 +3,7 @@ import { v4 as uuidv4, validate as validateUuid } from 'uuid';
 
 import server from '../index';
 import { AppRoutes } from '../types/const';
+import { User } from '../types/index';
 
 const createUserData = {
     username: 'test name',
@@ -10,20 +11,22 @@ const createUserData = {
     hobbies: ['swimming', 'dance'],
 };
 
-describe('api/users', () => {
-    afterAll(() => {
-        server.close();
-    });
+const createUserData2 = {
+    username: 'test name 2',
+    age: 20,
+    hobbies: ['fishing'],
+};
 
+describe('api/users', () => {
     let createdUserId: string = '';
 
-    it('should return empty array if no users should (GET)', async () => {
+    it('should return empty array if no users (GET)', async () => {
         const response = await request(server)
             .get(AppRoutes.USERS)
             .expect(200);
 
-        expect(response.body.users).toBeDefined();
-        expect(response.body.users).toHaveLength(0);
+        expect(response.body).toBeDefined();
+        expect(response.body).toHaveLength(0);
     });
 
     it('should return 400 status code with message in case of incorrect body (POST)', async () => {
@@ -81,11 +84,50 @@ describe('api/users', () => {
     });
 });
 
-describe('should return correct errors get user by id (GET)', () => {
-    afterAll(() => {
-        server.close();
+describe('create 2 users -> delete first user', () => {
+    let createdUserId1 = '';
+
+    it('should create user with correct body OK (POST)', async () => {
+        const response1 = await request(server)
+            .post(AppRoutes.USERS)
+            .send(createUserData)
+            .expect(201);
+
+        createdUserId1 = response1.body.id;
+
+        await request(server)
+            .post(AppRoutes.USERS)
+            .send(createUserData2)
+            .expect(201);
     });
 
+    it('should return array of users (GET)', async () => {
+        const response = await request(server)
+            .get(AppRoutes.USERS)
+            .expect(200);
+
+        expect(response.body).toBeDefined();
+        expect(response.body).toHaveLength(3);
+    });
+
+    it('should delete user by id (DELETE)', async () => {
+        await request(server)
+            .delete(`${AppRoutes.USERS}/${createdUserId1}`)
+            .expect(204);
+    });
+
+    it('should return array with 1 user (GET)', async () => {
+        const response = await request(server)
+            .get(AppRoutes.USERS)
+            .expect(200);
+
+        expect(response.body).toBeDefined();
+        expect(response.body).toHaveLength(2);
+        expect(response.body.find((user: User) => user.id === createdUserId1)).toBe(undefined);
+    });
+});
+
+describe('should return correct errors get user by id (GET)', () => {
     it('should return 400 status code in case of invalid id (GET)', async () => {
         const badId = 'not-a-uuid-id';
 

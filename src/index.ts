@@ -33,7 +33,7 @@ const server = http.createServer(async (request, response) => {
         const users = UsersService.getUsers();
 
         response.writeHead(200, { 'Content-Type': 'application/json' });
-        response.end(JSON.stringify({ users }));
+        response.end(JSON.stringify(users));
     }
 
     // !POST user
@@ -43,6 +43,30 @@ const server = http.createServer(async (request, response) => {
 
             response.writeHead(201, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify(createdUser));
+        } catch (error) {
+            catchApiError(error, response);
+        }
+    }
+
+    // !DELETE user by id
+    if (userId && url.includes(AppRoutes.USERS) && method === Method.DELETE) {
+        try {
+            await UsersService.deleteUser(userId);
+
+            response.writeHead(204);
+            response.end();
+        } catch (error) {
+            catchApiError(error, response);
+        }
+    }
+
+    // !UPDATE user by id
+    if (userId && url.includes(AppRoutes.USERS) && method === Method.PUT) {
+        try {
+            const updatedUser = await UsersService.updateUser(userId, request);
+
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(updatedUser));
         } catch (error) {
             catchApiError(error, response);
         }
