@@ -11,7 +11,7 @@
 
 3. checkout to the development branch
 
-        git checkout develop
+        git checkout develop-v2
 
 4. use 18 version of nodejs and install all dependencies
 
